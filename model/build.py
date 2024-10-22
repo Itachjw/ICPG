@@ -21,11 +21,6 @@ class ICPG(nn.Module):
 
         self.logit_scale = torch.ones([]) * (1 / args.temperature) 
 
-        if 'id' in args.loss_names:
-            self.classifier = nn.Linear(self.embed_dim, self.num_classes)
-            nn.init.normal_(self.classifier.weight.data, std=0.001)
-            nn.init.constant_(self.classifier.bias.data, val=0.0)
-
     def _set_task(self):
         loss_names = self.args.loss_names
         self.current_task = [l.strip() for l in loss_names.split('+')] 
@@ -78,18 +73,6 @@ class ICPG(nn.Module):
             if 'itc' in self.current_task:
                 ret.update({'itc_loss':objectives.compute_itc(i_feats, t_feats, logit_scale)})
                         
-            if 'id' in self.current_task:
-                image_logits = self.classifier(i_feats.half()).float()  
-                text_logits = self.classifier(t_feats.half()).float()
-                ret.update({'id_loss':objectives.compute_id(image_logits, text_logits, batch['pids'])*self.args.id_loss_weight})
-
-                image_pred = torch.argmax(image_logits, dim=1)
-                text_pred = torch.argmax(text_logits, dim=1)
-
-                image_precision = (image_pred == batch['pids']).float().mean()
-                text_precision = (text_pred == batch['pids']).float().mean()
-                ret.update({'img_acc': image_precision})
-                ret.update({'txt_acc': text_precision})
             return ret
         
         else :  # for clustering
