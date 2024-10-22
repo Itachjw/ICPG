@@ -97,14 +97,3 @@ def compute_itc(image_features, text_features, logit_scale):
 
     return loss
 
-
-def compute_id(image_logits, text_logits, labels):
-    """
-    Instance loss proposed at http://arxiv.org/abs/1711.05535
-    """
-    criterion = nn.CrossEntropyLoss(reduction="mean")
-
-    loss = criterion(image_logits, labels) + criterion(text_logits, labels)
-    
-    return loss / 2
-
